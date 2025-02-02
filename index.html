@@ -61,12 +61,24 @@
     <div>
         <button id="start" role="button">Start</button>
         <button id="randomize" role="button">Randomize</button>
+
+        <div style="margin-top: 2rem;margin: 10px;">
+            <h2 id="lc"></h2>
+            <h2 id="gen"></h2>
+        </div>
     </div>
 </div>
 
 </body>
 <script src="index.js"></script>
 <script>
+    const startButton = document.getElementById('start');
+    const randomizeButton = document.getElementById('randomize');
+    const lifeCellsTitle = document.getElementById('lc');
+    const genNumTitle = document.getElementById('gen');
+
+
+
     const gameState = new GameOfLife(200, 200);
     gameState.randomizeData();
     const cellSize = 5;
@@ -97,18 +109,14 @@
                 }
             }))
         }))
-
+        lifeCellsTitle.innerText = "Live cells: " + data.liveCells;
+        genNumTitle.innerText = "Gen number: " + data.gen;
         stage.add(layer);
         layer.draw();
         timeoutId = setTimeout(() => {
             start();
         }, 20);
     }
-
-
-    const startButton = document.getElementById('start');
-    const randomizeButton = document.getElementById('randomize');
-
 
     startButton.addEventListener('click', () => {
         if (startButton.innerText === 'Start' || startButton.innerText === 'Resume') {

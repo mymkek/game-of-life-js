@@ -95,11 +95,9 @@ class GameOfLife {
     }
 
     public iterate(): { grid: CellStates[][], liveCells: number, gen: number } {
-
         this.nextGen();
         this.gen++;
         const liveCells = this.countLiveCells();
-        console.log("title Tugamer89's Game of Life - Gen: " + this.gen + " - Live cells: " + liveCells);
 
         return {
             grid: this.grid.grid,
