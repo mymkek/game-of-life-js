@@ -69,6 +69,7 @@ class GameOfLife {
         this.grid.forEvery((x, y) => {
             this.grid.setElement(x, y, Math.random() > 0.5 ? CellStates.LIVE : CellStates.DEATH);
         });
+        this.gen = 1;
     }
     iterate() {
         this.nextGen();
