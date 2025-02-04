@@ -34,7 +34,7 @@
     const genNumTitle = document.querySelector('#gen>span');
     const clearButton = document.getElementById('clear');
 
-    const [xDim, yDim] = [200, 200];
+    const [xDim, yDim] = [20, 20];
 
     const randColor = () => {
         return Math.round(Math.random() * 255);
@@ -42,7 +42,7 @@
 
     const gameState = new GameOfLife(xDim, yDim);
     gameState.randomizeData();
-    let cellSize = 5;
+    let cellSize = 20;
 
     const stage = new Konva.Stage({
         container: 'game_grid',
@@ -51,7 +51,43 @@
         draggable: true,
     });
 
+
     const layer = new Konva.Layer();
+    const bglayer = new Konva.Layer();
+
+    const computeBackground = () => {
+        bglayer.destroyChildren();
+        const background = new Konva.Rect({
+            x: 0,
+            y: 0,
+            width: xDim * cellSize,
+            height: yDim * cellSize,
+            fill: '#FFF1B7',
+        });
+        stage.add(bglayer);
+        bglayer.add(background);
+        bglayer.draw();
+
+        background.on('click', function (e) {
+            const pos = background.getRelativePointerPosition();
+            const xCellPos = Math.floor(pos.y / cellSize);
+            const yCellPos = Math.floor(pos.x / cellSize);
+
+            if(gameState.getGrid.grid[xCellPos][yCellPos] === 1) {
+                gameState.removeItem(xCellPos, yCellPos)
+            } else {
+                gameState.addItem(xCellPos, yCellPos);
+            }
+
+            render(gameState.getGrid);
+        })
+    }
+
+    computeBackground();
+
+
+
+
 
     let timeoutId = -1;
 
@@ -85,20 +121,7 @@
         timeoutId = setTimeout(start, 200);
     }
 
-    const getEventCell = (x, y) => {
-        return [Math.floor(y / cellSize), Math.floor(x / cellSize)]
-    }
 
-    stage.on('click', function ({evt}) {
-        const [xCellPos, yCellPos] = getEventCell(evt.clientX, evt.clientY);
-        if(gameState.getGrid.grid[xCellPos][yCellPos] === 1) {
-            gameState.removeItem(xCellPos, yCellPos)
-        } else {
-            gameState.addItem(xCellPos, yCellPos);
-        }
-
-        render(gameState.getGrid);
-    })
 
     stage.on('wheel', ({evt}) => {
         evt.preventDefault();
@@ -109,13 +132,15 @@
         if(direction === scaleDown) {
             if(cellSize > 1) {
                 cellSize -= 1;
+                computeBackground();
                 render(gameState.getGrid);
             }
         }
 
         if(direction === scaleUp) {
-            if(cellSize < 20) {
+            if(cellSize < 30) {
                 cellSize += 1;
+                computeBackground();
                 render(gameState.getGrid);
             }
         }
