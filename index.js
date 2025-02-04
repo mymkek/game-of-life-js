@@ -21,6 +21,15 @@ class RectGrid {
         }
     }
     setElement(x, y, elem) {
+        if (x < 0 || x > this.X_DIM) {
+            throw "Unreachable x position";
+        }
+        if (y < 0 || y > this.Y_DIM) {
+            throw "Unreachable y position";
+        }
+        if (elem !== CellStates.LIVE && elem !== CellStates.DEATH) {
+            throw "Wrong elem type";
+        }
         this._grid[x][y] = elem;
     }
 }
@@ -29,15 +38,15 @@ class GameOfLife {
         this.X_DIM = xDim;
         this.Y_DIM = yDim;
         this.gen = 0;
+        this.aliveCells = 0;
         this.grid = new RectGrid(xDim, yDim);
     }
-    countLiveCells() {
-        let liveCells = 0;
-        this.grid.forEvery((x, y, elem) => {
-            if (elem === CellStates.LIVE)
-                liveCells++;
-        });
-        return liveCells;
+    get getGrid() {
+        return {
+            grid: this.grid.grid,
+            liveCells: this.aliveCells,
+            gen: this.gen
+        };
     }
     nextLiveCells(x, y) {
         let lives = 0;
@@ -54,31 +63,47 @@ class GameOfLife {
     }
     nextGen() {
         const tmpGrid = new RectGrid(this.X_DIM, this.Y_DIM);
+        this.aliveCells = 0;
         this.grid.forEvery((x, y, elem) => {
             const liveCells = this.nextLiveCells(x, y);
-            if (elem === CellStates.LIVE && liveCells === 2 || liveCells === 3)
+            if (elem === CellStates.LIVE && liveCells === 2 || liveCells === 3) {
                 tmpGrid.setElement(x, y, CellStates.LIVE);
-            else if (elem === CellStates.DEATH && liveCells === 3)
+                this.aliveCells++;
+            }
+            else if (elem === CellStates.DEATH && liveCells === 3) {
                 tmpGrid.setElement(x, y, CellStates.LIVE);
-            else
+                this.aliveCells++;
+            }
+            else {
                 tmpGrid.setElement(x, y, CellStates.DEATH);
+            }
         });
         this.grid = tmpGrid;
     }
-    randomizeData() {
-        this.grid.forEvery((x, y) => {
-            this.grid.setElement(x, y, Math.random() > 0.5 ? CellStates.LIVE : CellStates.DEATH);
-        });
+    addItem(x, y) {
+        this.grid.setElement(x, y, CellStates.LIVE);
+        this.aliveCells++;
+    }
+    removeItem(x, y) {
+        this.grid.setElement(x, y, CellStates.DEATH);
+        this.aliveCells--;
+    }
+    clear() {
+        this.grid = new RectGrid(this.X_DIM, this.Y_DIM);
+        this.aliveCells = 0;
         this.gen = 1;
+    }
+    randomizeData() {
+        this.clear();
+        this.grid.forEvery((x, y) => {
+            const isAlive = Math.random() > 0.5;
+            if (isAlive) {
+                this.addItem(x, y);
+            }
+        });
     }
     iterate() {
         this.nextGen();
         this.gen++;
-        const liveCells = this.countLiveCells();
-        return {
-            grid: this.grid.grid,
-            liveCells,
-            gen: this.gen
-        };
     }
 }

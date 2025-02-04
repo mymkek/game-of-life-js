@@ -29,6 +29,16 @@ class RectGrid {
     }
 
     public setElement(x: number, y: number, elem: CellStates): void {
+        if(x < 0 || x > this.X_DIM) {
+            throw "Unreachable x position";
+        }
+        if(y < 0 || y > this.Y_DIM) {
+            throw "Unreachable y position";
+        }
+        if(elem !== CellStates.LIVE && elem !== CellStates.DEATH) {
+            throw "Wrong elem type";
+        }
+
         this._grid[x][y] = elem;
     }
 
@@ -39,22 +49,22 @@ class GameOfLife {
     private readonly Y_DIM: number;
     private grid: RectGrid;
     private gen: number;
+    private aliveCells: number;
 
     constructor(xDim: number, yDim: number) {
         this.X_DIM = xDim;
         this.Y_DIM = yDim;
         this.gen = 0;
+        this.aliveCells = 0;
         this.grid = new RectGrid(xDim, yDim)
     }
 
-    private countLiveCells(): number {
-        let liveCells = 0;
-
-        this.grid.forEvery((x, y, elem) => {
-            if (elem === CellStates.LIVE) liveCells++;
-        })
-
-        return liveCells;
+    get getGrid(): { grid: CellStates[][], liveCells: number, gen: number } {
+        return {
+            grid: this.grid.grid,
+            liveCells: this.aliveCells,
+            gen: this.gen
+        };
     }
 
     private nextLiveCells(x: number, y: number): number {
@@ -73,38 +83,66 @@ class GameOfLife {
 
     private nextGen(): void {
         const tmpGrid = new RectGrid(this.X_DIM, this.Y_DIM);
+        this.aliveCells = 0;
 
         this.grid.forEvery((x, y, elem) => {
             const liveCells = this.nextLiveCells(x, y);
 
-            if (elem === CellStates.LIVE && liveCells === 2 || liveCells === 3)
+            if (elem === CellStates.LIVE && liveCells === 2 || liveCells === 3) {
                 tmpGrid.setElement(x, y, CellStates.LIVE);
-            else if (elem === CellStates.DEATH && liveCells === 3)
+                this.aliveCells++;
+            }
+
+            else if (elem === CellStates.DEATH && liveCells === 3) {
                 tmpGrid.setElement(x, y, CellStates.LIVE);
-            else
+                this.aliveCells++;
+            }
+            else {
                 tmpGrid.setElement(x, y, CellStates.DEATH);
+            }
+
         })
 
         this.grid = tmpGrid;
     }
 
-    public randomizeData(): void {
-        this.grid.forEvery((x, y) => {
-            this.grid.setElement(x, y, Math.random() > 0.5 ? CellStates.LIVE : CellStates.DEATH);
-        })
+    public addItem(x: number, y: number) {
+        if(this.grid.grid[x][y] !== CellStates.LIVE) {
+            this.grid.setElement(x, y, CellStates.LIVE);
+            this.aliveCells++;
+        }
+    }
+
+    public removeItem(x: number, y: number) {
+        if(this.grid.grid[x][y] !== CellStates.DEATH) {
+            this.grid.setElement(x, y, CellStates.DEATH);
+            this.aliveCells--;
+        }
+    }
+
+    public clear(): void {
+        this.grid = new RectGrid(this.X_DIM, this.Y_DIM);
+        this.aliveCells = 0;
         this.gen = 1;
     }
 
-    public iterate(): { grid: CellStates[][], liveCells: number, gen: number } {
+    public randomizeData(): void {
+        this.clear();
+
+        this.grid.forEvery((x, y) => {
+            const isAlive = Math.random() > 0.5;
+
+            if(isAlive) {
+                this.addItem(x, y);
+            }
+        })
+    }
+
+    public iterate() {
         this.nextGen();
         this.gen++;
-        const liveCells = this.countLiveCells();
 
-        return {
-            grid: this.grid.grid,
-            liveCells,
-            gen: this.gen
-        };
+
 
     }
 }
